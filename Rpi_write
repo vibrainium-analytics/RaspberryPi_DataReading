@@ -4,52 +4,54 @@ import urllib2
 import time
 import csv
 
+#Request user data
+
 choice = raw_input("For three individual axes values (X,Y,Z) enter A\nFor X-axis values enter X\nFor Y-axis values enter Y\nFor Z-axis values enter Z\nFor the combined values (X+Y+Z) enter C\n")
 samples = input("How many samples (one minute each)?\n")
 
 for j in range(0, samples):
-    flag = 0
+    W = 0                    
     if choice == 'A':
         name = choice + ' ' + time.asctime(time.localtime(time.time()))
         print (name)
         mkr = urllib2.urlopen("http://192.168.1.1/A")
         accl = mkr.read()
         mkr.close()
-        flag = 1
+        W = 1
     elif choice == 'C':
         name = choice + ' ' + time.asctime(time.localtime(time.time()))
         print (name)
         mkr = urllib2.urlopen("http://192.168.1.1/C")
         accl = mkr.read()
         mkr.close()
-        flag = 1
+        W = 1
     elif choice == 'X':
         name = choice + ' ' + time.asctime(time.localtime(time.time()))
         print (name)
         mkr = urllib2.urlopen("http://192.168.1.1/X")
         accl = mkr.read()
         mkr.close()
-        flag = 1
+        W = 1
     elif choice == 'Y':
         name = choice + ' ' + time.asctime(time.localtime(time.time()))
         print (name)
         mkr = urllib2.urlopen("http://192.168.1.1/Y")
         accl = mkr.read()
         mkr.close()
-        flag = 1
+        W = 1
     elif choice == 'Z':
         name = choice + ' ' + time.asctime(time.localtime(time.time()))
         print (name)
         mkr = urllib2.urlopen("http://192.168.1.1/Z")
         accl = mkr.read()
         mkr.close()
-        flag = 1
+        W = 1
         
-    if flag == 1:
+    if W == 1:
         f = open(name,"w")
         f.write(accl)
         f.close
-if flag == 0:
+if W == 0:
     print ("invalid entry")
 print ("done reading")
 
