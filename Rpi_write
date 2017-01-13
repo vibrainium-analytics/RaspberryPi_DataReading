@@ -5,6 +5,7 @@ import time
 import csv
 
 #Request user data
+#Does this work?
 
 choice = raw_input("For three individual axes values (X,Y,Z) enter A\nFor X-axis values enter X\nFor Y-axis values enter Y\nFor Z-axis values enter Z\nFor the combined values (X+Y+Z) enter C\n")
 samples = input("How many samples (one minute each)?\n")
