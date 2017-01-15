@@ -7,7 +7,7 @@ import csv
 #Request user data. Input from user will be placed into variables
 
 choice = raw_input(
-("For three individual axes values (X,Y,Z) enterA\n"
+("For three individual axes values (X,Y,Z) enter A\n"
 "For X-axis values enter X\n"
 "For Y-axis values enter Y\n"
 "For Z-axis values enter Z\n"
@@ -18,35 +18,35 @@ samples = input("How many samples (one minute each)?\n")
 for j in range(0, samples):
     W = 0                   #determines if the data will be written to file
     if choice == 'A':
-        name = choice + ' ' + time.asctime(time.localtime(time.time())+ '.txt.')
+        name = choice + ' ' + time.asctime(time.localtime(time.time()))
         print (name)        #debugging step. displays name of file to be created
         mkr = urllib2.urlopen("http://192.168.1.1/A")
         accl = mkr.read()
         mkr.close()
         W = 1               #data was recieved so a write will be performed
     elif choice == 'C':
-        name = choice + ' ' + time.asctime(time.localtime(time.time())+ '.txt')
+        name = choice + ' ' + time.asctime(time.localtime(time.time()))
         print (name)
         mkr = urllib2.urlopen("http://192.168.1.1/C")
         accl = mkr.read()
         mkr.close()
         W = 1
     elif choice == 'X':
-        name = choice + ' ' + time.asctime(time.localtime(time.time())+ '.txt')
+        name = choice + ' ' + time.asctime(time.localtime(time.time()))
         print (name)
         mkr = urllib2.urlopen("http://192.168.1.1/X")
         accl = mkr.read()
         mkr.close()
         W = 1
     elif choice == 'Y':
-        name = choice + ' ' + time.asctime(time.localtime(time.time())+ '.txt')
+        name = choice + ' ' + time.asctime(time.localtime(time.time()))
         print (name)
         mkr = urllib2.urlopen("http://192.168.1.1/Y")
         accl = mkr.read()
         mkr.close()
         W = 1
     elif choice == 'Z':
-        name = choice + ' ' + time.asctime(time.localtime(time.time())+ '.txt')
+        name = choice + ' ' + time.asctime(time.localtime(time.time()))
         print (name)
         mkr = urllib2.urlopen("http://192.168.1.1/Z")
         accl = mkr.read()
@@ -56,7 +56,7 @@ for j in range(0, samples):
     #if user made a valid choice data will be written to text file    
 
     if W == 1:
-        f = open(name,"w")
+        f = open(name + '.txt',"w")
         f.write(accl)
         f.close
 
