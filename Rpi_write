@@ -10,11 +10,20 @@ choice = raw_input(
 ("For three individual axes values (X,Y,Z) enter A\n"
 "For X-axis values enter X\n"
 "For Y-axis values enter Y\n"
-"For Z-axis values enter Z\n"
-"For the combined values (X+Y+Z) enter C\n")
+"For Z-axis values enter Z\n")
 )
+wait = raw_input("Do you want a delay before sampling begins Y or N\n")
+if wait == 'Y':
+    pause = input("How many minutes to delay?\n")
 samples = input("How many samples (one minute each)?\n")
-
+if wait == 'Y':
+    print ('waiting...')
+    for i in range(0, pause):
+        delay = urllib2.urlopen("http://192.168.1.1/D")
+        count = delay.read()
+        print ('minute ' + str(i+1))
+        delay.close()
+print ('sampling...')        
 for j in range(0, samples):
     W = 0                   #determines if the data will be written to file
     if choice == 'A':
@@ -24,13 +33,6 @@ for j in range(0, samples):
         accl = mkr.read()
         mkr.close()
         W = 1               #data was recieved so a write will be performed
-    elif choice == 'C':
-        name = choice + ' ' + str(j) # file name is the type of data and loop number
-        print (name)
-        mkr = urllib2.urlopen("http://192.168.1.1/C")
-        accl = mkr.read()
-        mkr.close()
-        W = 1
     elif choice == 'X':
         name = choice + ' ' + str(j) # file name is the type of data and loop number
         print (name)
