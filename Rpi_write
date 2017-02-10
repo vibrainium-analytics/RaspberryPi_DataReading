@@ -8,14 +8,14 @@ import os
 #Request user data. Input from user will be placed into variables
 
 fold = raw_input("What is the name of the folder to store the data?\n")
-path = "/home/pi" + fold
+path = "/home/pi/" + fold
 new = 'N'
 
 while os.path.exists(path) and new == 'N':
     new = raw_input("That folder already exists. Use it anyway? Y or N\n")
     if new == "N":
         fold = raw_input("What is the name of the folder to store the data?\n")
-        path = "/home/owner/" + fold
+        path = "/home/pi/" + fold
         
 if not os.path.exists(path):
     os.makedirs(path)
