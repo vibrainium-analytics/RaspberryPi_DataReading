@@ -132,7 +132,7 @@ for j in range(0, samples):
         name = "Three Axes" + ' ' + str(j) # file name is the type of data and loop number
         print (name)        #debugging step. displays name of file to be created
         mkr = urllib.request.urlopen("http://192.168.1.1/A")
-        accl = str(mkr.read())
+        accl = mkr.read().decode()
         mkr.close()
         filenam = datapath + '/' + name + '.txt'
         f = open(filenam,"w")
