@@ -4,12 +4,14 @@ import urllib.request
 import datetime
 import csv
 import os
+import os.path
 import shutil
 
 
 # Initialize Variables
 path = "/home/pi/"
 temp = path + "temp/"
+fnm = 'Three Axes'
 
 # Start program
 print ("Starting...\n")
@@ -106,14 +108,14 @@ for i in range(0, pause):
 
 # collect data
 print ('sampling...')
+os.makedirs(temp)
 for j in range(0, samples):
-    name = "Three Axes" + ' ' + str(j+1)
+    name = fnm + str(j+1)
     num = str(j+1)
     print ('sample #' + num)                                                
     mkr = urllib.request.urlopen("http://192.168.1.1/A")
     accl = mkr.read().decode()
     mkr.close()
-    os.makedirs(temp)
     filenam = temp + name + '.txt'
     f = open(filenam,"w")
     f.write(accl)
@@ -197,7 +199,7 @@ if test == 3:
     isgood = False
     while isgood == False:
         try:
-            speed1 = int(input('What was the vehicle speed in miles per hour for the test?/n'))
+            speed1 = int(input('What was the vehicle speed in miles per hour for the test?\n'))
             isgood = True
         except (ValueError):
             print('Please enter a number')
@@ -233,7 +235,7 @@ if test == 4:
     isgood = False
     while isgood == False:
         try:
-            speed1 = int(input('What was the vehicle speed in miles per hour for the test?/n'))
+            speed1 = int(input('What was the vehicle speed in miles per hour for the test?\n'))
             isgood = True
         except (ValueError):
             print('Please enter a number')
@@ -243,8 +245,51 @@ if test == 4:
     os.makedirs(pathTSS)
     datapath = pathTSS
 
-# Limit number of samples 
+# Remove samples that did not match test parameters (user determined) 
+isgood = False
+while isgood == False:
+    bdata = input(
+        ('Were there samples that did not match the desired conditions?\n'
+         '(For example the vehicle slowed down or sped up) Y or N\n')
+        )
+    if bdata == 'Y' or  bdata == 'y':
+        remv = True
+        isgood = True
+    elif bdata == 'N' or bdata == 'n':
+        remv = False
+        isgood = True
+    else:
+        print('Please enter Y or N')
+if remv == True:
+    bsmpl = input(
+        ('Which samples should be removed?\n'
+         '(place space between numbers ex: 1 3 4)\n')
+        )
+    for j in range(1, samples+1):
+        if len(bsmpl) == 1:
+            k = str(j)
+            l = k
+        else:
+            k = str(j) + ' '
+            l = ' ' + str(j)
+        if k in bsmpl or bsmpl[-2:] == l:
+            rm = 'Sample ' + str(j) + ' removed.'
+            print(rm)
+            fnmr = temp + fnm + str(j) + '.txt'
+            os.remove(fnmr)
 
+# Move remaining files from temp folder and delete temp folder
+count = 1
+for j in range(1, samples+1):
+    fnmt = temp + fnm + str(j) + '.txt'
+    if  os.path.exists(fnmt)==True:
+        nfnm = datapath + fnm + str(count) + '.txt'
+        os.rename(fnmt, nfnm)
+        count = count + 1
+os.rmdir(temp)
+        
+        
+    
 
 
     
