@@ -10,9 +10,8 @@ import shutil
 # Initialize Variables
 path = "/home/pi/"
 temp = path + "temp/"
-pasd = False
-isgood = False
 
+# Start program
 print ("Starting...\n")
 input(
     ("Turn on Wi-fi and connect to wifi101-network.\n"
@@ -20,7 +19,7 @@ input(
     )
 
 # Run connection test and sensor self test
-
+pasd = False
 while pasd == False:
     try:
         self = urllib.request.urlopen("http://192.168.1.1/S", timeout=20).read()
@@ -42,33 +41,32 @@ while pasd == False:
         elif 'pass' in selftest:
             pasd = True
 
-# Get vehicle name
+# Get vehicle name. Check for baseline data and report to user
 veh = input("Enter the name of the vehicle (ex: Steve-Toyota).\n")
-
-# Check for baseline data and report to user
 pathI = path + veh + "-BaseIdle/"
 pathAC = path + veh + "-BaseACIdle/"
 pathSS = path + veh + "-BaseStdySpd/"
 if os.path.exists(pathI):
-    baseI = True
     print('Baseline folder exists for AC off')
+    baseI = True
 else:
     print('No standard baseline exists for this vehicle with AC off at idle')
     baseI = False    
 if os.path.exists(pathAC):
-    baseAC = True
     print('Baseline folder exists for AC on')
+    baseAC = True
 else:
     print('No standard baseline exists for this vehicle with AC on at idle')
     baseAC = False
 if os.path.exists(pathSS):
-    baseSS = True
     print ('Steady Speed baseline folder exists')
+    baseSS = True 
 else:
     print('No standard baselines exist for this vehicle at steady speed.')
     baseSS = False
 
-# Get test number
+# Get number of test to run
+isgood = False
 while isgood == False:
     try:
         test = int(input(
@@ -85,20 +83,21 @@ while isgood == False:
     except (ValueError):
         print('Please enter and number between 1 and 4')      
 
-# Check for delay request and sample length
+# Check for delay request and test length
 isgood = False
 while isgood == False:
     try:
         pause = int(input(
             ("\nHow many minutes do you want to delay to allow the vehicle\n"
-             "to reach desired test conditions. (enter 0 for no delay)\n")
+             "to reach test conditions. (enter 0 for no delay)\n")
             ))
         samples = int(input("\nHow many one minute samples? (there should be at least 3)\n"))
-        print ('waiting...')
         isgood = True
     except (ValueError):
-        print('Please enter and number')
+        print('Please enter a number')
         
+# Pause for vehicle to reach test conditions
+print ('waiting...')       
 for i in range(0, pause):
     print ('minute ' + str(i+1))
     delay = urllib.request.urlopen("http://192.168.1.1/D")
@@ -125,7 +124,7 @@ print ("done reading")
 if test == 1:
     isgood = False
     while isgood == False:
-        on = input("Was the AC on? Y or N")
+        on = input("Was the AC on? Y or N\n")
         if on == 'Y' or  on == 'y':
             AC = True
             isgood = True
@@ -137,11 +136,11 @@ if test == 1:
     if baseI == True or baseAC == True:
         isgood = False
         while isgood == False:
-            ow = input("Baseline exists. Do you want to overwrite? Y or N")
-            if ow == 'Y' or  on == 'y':
+            ow = input("Baseline exists. Do you want to overwrite? Y or N\n")
+            if ow == 'Y' or  ow == 'y':
                 Over = True
                 isgood = True
-            elif ow == 'N' or on == 'n':
+            elif ow == 'N' or ow == 'n':
                 Over = False
                 isgood = True
             else:
@@ -152,7 +151,7 @@ if test == 1:
         datapath = pathAC
         print("baseline replaced")
     elif AC == True and baseAC == True and Over == False:
-        new = input("Enter the name for this new baseline.")
+        new = input("Enter the name for this new baseline.\n")
         pathAC = pathAC[:-1] + '' 
         datapath = pathAC + '-' + new + "/"
         os.makedirs(datapath)
@@ -165,7 +164,7 @@ if test == 1:
         datapath = pathI
         print("baseline replaced")
     elif AC == False and baseI == True and Over == False:
-        new = input("Enter the name for this new baseline.")
+        new = input("Enter the name for this new baseline.\n")
         pathI = pathI[:-1] + '' 
         datapath = pathI + '-' + new + "/"
         os.makedirs(datapath)
@@ -176,7 +175,7 @@ if test == 1:
 if test == 2:
     isgood = False
     while isgood == False:
-        on = input("Was the AC on? Y or N")
+        on = input("Was the AC on? Y or N\n")
         if on == 'Y' or  on == 'y':
             AC = True
             isgood = True
@@ -190,36 +189,57 @@ if test == 2:
     elif AC == False:
         trb = "-Idle-Trbl-NO-AC/"
     now = '{:%Y-%b-%d %H:%M}'.format(datetime.datetime.now()) 
-    pathTI = path + now + veh + trb + '/'
+    pathTI = path + now + '-' + veh + trb + '/'
     os.makedirs(pathTI)
     datapath = pathTI
     
 if test == 3:
-    speed = int(input('What was the vehicle speed in miles per hour for the test?'))
+    isgood = False
+    while isgood == False:
+        try:
+            speed1 = int(input('What was the vehicle speed in miles per hour for the test?/n'))
+            isgood = True
+        except (ValueError):
+            print('Please enter a number')
+    speed = 5 *(round((speed1)/5))
     pathSS1 = pathSS + str(speed) + 'MPH/'
-    if baseSS == True:
-        #check for existing baseline at this speed
-        if os.path.exists(pathSS):
-            ow = input("Baseline exists for this speed. Do you want to overwrite? Y or N")
-            if ow == "Y" or ow == 'y':
-                shutil.rmtree(pathSS1)           
-                os.makedirs(pathSS1)
-                datapath = pathSS1
-                print("baseline replaced")
+    if baseSS == True and os.path.exists(pathSS1):
+        isgood = False
+        while isgood == False:
+            ow = input("Baseline exists for this speed. Do you want to overwrite? Y or N\n")
+            if ow == 'Y' or  ow == 'y':
+                Over = True
+                isgood = True
+            elif ow == 'N' or ow == 'n':
+                Over = False
+                isgood = True
             else:
-                new = input("Enter the name for this new baseline.")
-                datapath = pathSS + new + "/"
-                os.makedirs(datapath)
-        else:
+                print('Please enter Y or N') 
+        if Over == True:
+            shutil.rmtree(pathSS1)           
             os.makedirs(pathSS1)
-            datapath = pathSS1 
+            datapath = pathSS1
+            print("baseline replaced")
+        elif Over == False:
+            new = input("Enter the name for this new baseline.\n")
+            pathSS = pathSS[:-1] + '' 
+            datapath = pathSS + '-' + new + "/" + str(speed) + 'MPH/'
+            os.makedirs(datapath)
     else:
         os.makedirs(pathSS1)
-        datapath = pathSS1
+        datapath = pathSS1 
+
 if test == 4:
-    speed = int(input('What was the vehicle speed in miles per hour for the test?'))    
+    isgood = False
+    while isgood == False:
+        try:
+            speed1 = int(input('What was the vehicle speed in miles per hour for the test?/n'))
+            isgood = True
+        except (ValueError):
+            print('Please enter a number')
+    speed = 5*(round((speed1)/5))
     now = '{:%Y-%b-%d %H:%M}'.format(datetime.datetime.now()) 
-    pathTSS = path + now + veh + '-Stdy-Spd-Trbl' + str(speed) +'MPH/'
+    pathTSS = path + now + '-' + veh + '-Stdy-Spd-Trbl' + str(speed) +'MPH/'
     os.makedirs(pathTSS)
     datapath = pathTSS
 
