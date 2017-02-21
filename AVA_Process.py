@@ -3,13 +3,12 @@
 import urllib.request
 import datetime
 import os
-#import os.path
 import shutil
 import math
 
 
 # Initialize Variables
-path = "/home/owner/"       # path name for file location on Raspberry Pi
+path = "/home/pi/"       # path name for file location on Raspberry Pi
 temp = path + "temp/"       # temporary file location
 temp1 = path + 'temp1/'     # temporary file location    
 fnm = 'Three Axes'          # permanent file name where vibration data is stored    
@@ -17,14 +16,14 @@ xo = 2090                   # Approximate x-axis zero vibration value
 yo = 2010                   # Approximate y-axis zero vibration value
 zo = 2500                   # Approximate z-axis zero vibration value
  
-# Start program
+# Start program.
 print ("Starting...\n")
 input(
     ("Turn on Wi-fi and connect to wifi101-network.\n"
      "Press enter when done\n")
     )
 
-# Run connection test and sensor self test
+# Run connection test and sensor self test.
 pasd = False
 while pasd == False:
     try:
