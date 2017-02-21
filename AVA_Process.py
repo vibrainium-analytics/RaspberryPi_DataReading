@@ -2,17 +2,21 @@
 
 import urllib.request
 import datetime
-import csv
 import os
-import os.path
+#import os.path
 import shutil
+import math
 
 
 # Initialize Variables
-path = "/home/pi/"
-temp = path + "temp/"
-fnm = 'Three Axes'
-
+path = "/home/owner/"       # path name for file location on Raspberry Pi
+temp = path + "temp/"       # temporary file location
+temp1 = path + 'temp1/'     # temporary file location    
+fnm = 'Three Axes'          # permanent file name where vibration data is stored    
+xo = 2090                   # Approximate x-axis zero vibration value            
+yo = 2010                   # Approximate y-axis zero vibration value
+zo = 2500                   # Approximate z-axis zero vibration value
+ 
 # Start program
 print ("Starting...\n")
 input(
@@ -43,11 +47,13 @@ while pasd == False:
         elif 'pass' in selftest:
             pasd = True
 
-# Get vehicle name. Check for baseline data and report to user
+# Get vehicle name. Set baseline directories.
 veh = input("Enter the name of the vehicle (ex: Steve-Toyota).\n")
 pathI = path + veh + "-BaseIdle/"
 pathAC = path + veh + "-BaseACIdle/"
 pathSS = path + veh + "-BaseStdySpd/"
+
+# Check for baseline data and report to user.
 if os.path.exists(pathI):
     print('Baseline folder exists for AC off')
     baseI = True
@@ -108,7 +114,7 @@ for i in range(0, pause):
 
 # collect data
 print ('sampling...')
-os.makedirs(temp)
+os.makedirs(temp1)
 for j in range(0, samples):
     name = fnm + str(j+1)
     num = str(j+1)
@@ -116,11 +122,33 @@ for j in range(0, samples):
     mkr = urllib.request.urlopen("http://192.168.1.1/A")
     accl = mkr.read().decode()
     mkr.close()
-    filenam = temp + name + '.txt'
+    filenam = temp1 + name + '.txt'
     f = open(filenam,"w")
     f.write(accl)
     f.close
 print ("done reading")
+
+# Calculate magnitude of the 3-axis vibrations and reduce DC component
+os.makedirs(temp)
+for j in range(0, samples):
+    fname = temp1 + fnm + str(j+1) + '.txt'
+    f=open(fname,'r')
+    g=f.readlines()
+    f.close
+    fname2 = temp + fnm + str(j+1) + '.txt'
+    f=open(fname2,'w')
+    for i in range(0, len(g)-1):
+        a = g[i]
+        b = a.split()
+        x = float(b[0]) - xo
+        y = float(b[1]) - yo
+        z = float(b[2]) - zo
+        mag = int(math.sqrt(math.pow(x,2)+math.pow(y,2)+math.pow(z,2)))
+        c = str(b[0]) + ' ' + str(b[1]) + ' ' + str(b[2]) + ' ' + str(mag) + '\n'
+        f.write(c)
+    f.close 
+shutil.rmtree(temp1)
+    
 
 # set up folders for data        
 if test == 1:
