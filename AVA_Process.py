@@ -5,13 +5,15 @@ import datetime
 import os
 import shutil
 import math
+import numpy
 
 
 # Initialize Variables
-path = "/home/pi/"       # path name for file location on Raspberry Pi
-temp = path + "temp/"       # temporary file location
-temp1 = path + 'temp1/'     # temporary file location    
-fnm = 'Three Axes'          # permanent file name where vibration data is stored    
+freq = 500                  # mkr sample frequency in Hz
+n = 256                     # number of points in fft
+runav = 20                  # number of points in fft running average
+path = "/home/owner/"          # path name for file location on Raspberry Pi       
+fname = 'Three Axes'        # permanent file name where vibration data is stored    
 xo = 2090                   # Approximate x-axis zero vibration value            
 yo = 2010                   # Approximate y-axis zero vibration value
 zo = 2500                   # Approximate z-axis zero vibration value
@@ -46,11 +48,13 @@ while pasd == False:
         elif 'pass' in selftest:
             pasd = True
 
-# Get vehicle name. Set baseline directories.
+# Get vehicle name. Set directories.
 veh = input("Enter the name of the vehicle (ex: Steve-Toyota).\n")
 pathI = path + veh + "-BaseIdle/"
 pathAC = path + veh + "-BaseACIdle/"
 pathSS = path + veh + "-BaseStdySpd/"
+temp = path + "temp/"
+temp1 = path + 'temp1/' 
 
 # Check for baseline data and report to user.
 if os.path.exists(pathI):
@@ -115,7 +119,7 @@ for i in range(0, pause):
 print ('sampling...')
 os.makedirs(temp1)
 for j in range(0, samples):
-    name = fnm + str(j+1)
+    name = fname + str(j+1)
     num = str(j+1)
     print ('sample #' + num)                                                
     mkr = urllib.request.urlopen("http://192.168.1.1/A")
@@ -130,25 +134,24 @@ print ("done reading")
 # Calculate magnitude of the 3-axis vibrations and reduce DC component
 os.makedirs(temp)
 for j in range(0, samples):
-    fname = temp1 + fnm + str(j+1) + '.txt'
-    f=open(fname,'r')
-    g=f.readlines()
+    fname1 = temp1 + fname + str(j+1) + '.txt'
+    f=open(fname1,'r')
+    data=f.readlines()
     f.close
-    fname2 = temp + fnm + str(j+1) + '.txt'
+    fname2 = temp + fname + str(j+1) + '.txt'
     f=open(fname2,'w')
-    for i in range(0, len(g)-1):
-        a = g[i]
-        b = a.split()
-        x = float(b[0]) - xo
-        y = float(b[1]) - yo
-        z = float(b[2]) - zo
+    for i in range(0, len(data)-1):
+        row = data[i]
+        col = row.split()
+        x = float(col[0]) - xo
+        y = float(col[1]) - yo
+        z = float(col[2]) - zo
         mag = int(math.sqrt(math.pow(x,2)+math.pow(y,2)+math.pow(z,2)))
-        c = str(b[0]) + ' ' + str(b[1]) + ' ' + str(b[2]) + ' ' + str(mag) + '\n'
-        f.write(c)
+        data1 = str(col[0]) + ' ' + str(col[1]) + ' ' + str(col[2]) + ' ' + str(mag) + '\n'
+        f.write(data1)
     f.close 
 shutil.rmtree(temp1)
     
-
 # set up folders for data        
 if test == 1:
     isgood = False
@@ -306,15 +309,58 @@ if remv == True:
             os.remove(fnmr)
 
 # Move remaining files from temp folder and delete temp folder
-count = 1
+count = 0
 for j in range(1, samples+1):
-    fnmt = temp + fnm + str(j) + '.txt'
+    fnmt = temp + fname + str(j) + '.txt'
     if  os.path.exists(fnmt)==True:
-        nfnm = datapath + fnm + str(count) + '.txt'
-        os.rename(fnmt, nfnm)
         count = count + 1
+        newfnm = datapath + fname + str(count) + '.txt'
+        os.rename(fnmt, newfnm)
 os.rmdir(temp)
         
+# read magnitude values from all files into array
+mag = numpy.zeros(0)
+for i in range(0, count):
+    filename = datapath + fname + str(i+1) + '.txt'
+    f=open(filename,'r')
+    data=f.readlines()
+    f.close()
+    mag1 = numpy.zeros(len(data))   
+    for i in range(0, len(data)-1):
+        row = data[i]        
+        col = row.split()
+        mag1[i] = row[3]
+    mag = numpy.append(mag,mag1)
+    
+# calculate running average of fft
+strt = 1
+fnsh = n
+ary = mag[strt:fnsh]
+fq=numpy.absolute(numpy.fft.rfft(ary))
+fq[0] = 0
+for j in range(1, runav):
+    strt = fnsh+1
+    fnsh = fnsh+n
+    ary = mag[strt:fnsh]
+    fq1=numpy.absolute(numpy.fft.rfft(ary))
+    fq1[0] = 0
+    fq = ((fq*j) + fq1)/(j+1)
+while (fnsh+n) < len(mag):
+    strt = fnsh+1
+    fnsh = fnsh+n
+    ary = mag[strt:fnsh]
+    fq1=numpy.absolute(numpy.fft.rfft(ary))
+    fq1[0] = 0
+    fq = ((fq*runav) + fq1)/(runav+1)
+
+# write output to file
+filename2 = datapath + 'fft' + str(freq/2) + 'Hz.txt'
+for i in range(0, int(n/2)):
+    t = float("{0:.1f}".format(i * freq/n))
+    z = str(t) + ' ' + str(int(fq[i])) + '\n'
+    with open(filename2, 'a') as out:
+        out.write(z)
+f.close
         
     
 
