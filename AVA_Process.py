@@ -6,13 +6,14 @@ import os
 import shutil
 import math
 import numpy
+from scipy import signal
 
 
 # Initialize Variables
 freq = 500                  # mkr sample frequency in Hz
 n = 256                     # number of points in fft
 runav = 20                  # number of points in fft running average
-path = "/home/owner/"          # path name for file location on Raspberry Pi       
+path = "/home/pi/"          # path name for file location on Raspberry Pi       
 fname = 'Three Axes'        # permanent file name where vibration data is stored    
 xo = 2090                   # Approximate x-axis zero vibration value            
 yo = 2010                   # Approximate y-axis zero vibration value
@@ -317,50 +318,93 @@ for j in range(1, samples+1):
         newfnm = datapath + fname + str(count) + '.txt'
         os.rename(fnmt, newfnm)
 os.rmdir(temp)
-        
+
 # read magnitude values from all files into array
 mag = numpy.zeros(0)
-for i in range(0, count):
-    filename = datapath + fname + str(i+1) + '.txt'
+m = mag
+for j in range(0, count):
+    filename = datapath + fname + str(j+1) + '.txt'
     f=open(filename,'r')
     data=f.readlines()
     f.close()
-    mag1 = numpy.zeros(len(data))   
+    m = numpy.zeros(len(data)-1)
     for i in range(0, len(data)-1):
         row = data[i]        
         col = row.split()
-        mag1[i] = row[3]
-    mag = numpy.append(mag,mag1)
+        m[i] = col[2]
+    mag = numpy.append(mag,m)
     
 # calculate running average of fft
 strt = 1
-fnsh = n
-ary = mag[strt:fnsh]
-fq=numpy.absolute(numpy.fft.rfft(ary))
+fnsh = n 
+smpl = mag[strt:fnsh]
+fq=numpy.absolute(numpy.fft.rfft(smpl))
 fq[0] = 0
 for j in range(1, runav):
     strt = fnsh+1
     fnsh = fnsh+n
-    ary = mag[strt:fnsh]
-    fq1=numpy.absolute(numpy.fft.rfft(ary))
+    smpl = mag[strt:fnsh]
+    fq1=numpy.absolute(numpy.fft.rfft(smpl))
     fq1[0] = 0
     fq = ((fq*j) + fq1)/(j+1)
 while (fnsh+n) < len(mag):
     strt = fnsh+1
     fnsh = fnsh+n
-    ary = mag[strt:fnsh]
-    fq1=numpy.absolute(numpy.fft.rfft(ary))
+    smpl = mag[strt:fnsh]
+    fq1=numpy.absolute(numpy.fft.rfft(smpl))
     fq1[0] = 0
     fq = ((fq*runav) + fq1)/(runav+1)
 
 # write output to file
 filename2 = datapath + 'fft' + str(freq/2) + 'Hz.txt'
 for i in range(0, int(n/2)):
-    t = float("{0:.1f}".format(i * freq/n))
-    z = str(t) + ' ' + str(int(fq[i])) + '\n'
+    hz = float("{0:.1f}".format(i * freq/n))
+    enrg = str(hz) + ' ' + str(int(fq[i])) + '\n'
     with open(filename2, 'a') as out:
-        out.write(z)
+        out.write(enrg)
 f.close
+freq = freq/2
+k=2
+while k < 4:
+    b, a = signal.butter(20, .5)
+    mag1 = signal.filtfilt(b, a, mag)
+    stp = (int((len(mag)/k)-runav))
+    mag = numpy.zeros(0)
+    for i in range(1, stp):
+        mag = numpy.append(mag,mag1[(2*i)-1])
+    
+    # calculate running average of fft
+    strt = runav
+    fnsh = n + runav-1
+    smpl = mag[strt:fnsh]
+    fq=numpy.absolute(numpy.fft.rfft(smpl))
+    fq[0] = 0
+    for j in range(1, runav):
+        strt = fnsh+1
+        fnsh = fnsh+n
+        smpl = mag[strt:fnsh]
+        fq1=numpy.absolute(numpy.fft.rfft(smpl))
+        fq1[0] = 0
+        fq = ((fq*j) + fq1)/(j+1)
+    while (fnsh+n) < len(mag):
+        strt = fnsh+1
+        fnsh = fnsh+n
+        smpl = mag[strt:fnsh]
+        fq1=numpy.absolute(numpy.fft.rfft(smpl))
+        fq1[0] = 0
+        fq = ((fq*runav) + fq1)/(runav+1)
+
+    # write output to file
+    filename2 = datapath + 'fft' +str(freq/2) + 'Hz.txt'
+    for i in range(0, int(n/2)):
+        hz = float("{0:.1f}".format(i * freq/n))
+        enrg = str(hz) + ' ' + str(int(fq[i])) + '\n'
+        with open(filename2, 'a') as out:
+            out.write(enrg)
+    f.close
+    freq = freq/(2)
+    k = k+1        
+
         
     
 
