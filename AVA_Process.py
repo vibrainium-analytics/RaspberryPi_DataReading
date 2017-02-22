@@ -354,12 +354,17 @@ while (fnsh+n) < len(mag):
     fq1=numpy.absolute(numpy.fft.rfft(smpl))
     fq1[0] = 0
     fq = ((fq*runav) + fq1)/(runav+1)
+    
+# normalize fft
+s = numpy.sum(fq)
+norm = s/(len(fq))
+fq = fq / norm
 
 # write output to file
 filename2 = datapath + 'fft' + str(freq/2) + 'Hz.txt'
 for i in range(0, int(n/2)):
     hz = float("{0:.1f}".format(i * freq/n))
-    enrg = str(hz) + ' ' + str(int(fq[i])) + '\n'
+    enrg = str(hz) + ' ' + str(float("{0:.2f}".format(fq[i]))) + '\n'
     with open(filename2, 'a') as out:
         out.write(enrg)
 f.close
@@ -394,11 +399,16 @@ while k < 4:
         fq1[0] = 0
         fq = ((fq*runav) + fq1)/(runav+1)
 
+    # normalize fft
+    s = numpy.sum(fq)
+    norm = s/(len(fq))
+    fq = fq / norm  
+
     # write output to file
     filename2 = datapath + 'fft' +str(freq/2) + 'Hz.txt'
     for i in range(0, int(n/2)):
         hz = float("{0:.1f}".format(i * freq/n))
-        enrg = str(hz) + ' ' + str(int(fq[i])) + '\n'
+        enrg = str(hz) + ' ' + str(float("{0:.2f}".format(fq[i]))) + '\n'
         with open(filename2, 'a') as out:
             out.write(enrg)
     f.close
